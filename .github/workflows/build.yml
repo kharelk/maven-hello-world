@@ -27,6 +27,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      - name: Navigate to project dir
+        run: cd ./maven-hello-world
+
       - name: Build with Maven
         run: mvn package
 
