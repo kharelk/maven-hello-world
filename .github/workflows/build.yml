@@ -28,7 +28,7 @@ jobs:
         run: mvn -f myapp/pom.xml --batch-mode --update-snapshots verify
 
       - name: Package build artifacts
-        run: mkdir -p stage && cp target/*.jar stage
+        run: mkdir -p stage && cp myapp/target/*.jar stage
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
