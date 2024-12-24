@@ -37,9 +37,10 @@ jobs:
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
+          AUTHOR=$(git log -1 --pretty=format:'%an')
           git add myapp/pom.xml
-          git commit -m "Incremented version to ${{ env.version }}"
-          git push          
+          git commit -m "Incremented version to ${{ env.version }} (Last updated by: $AUTHOR)"
+          git push
 
       - name: Build with Maven
         run: mvn -f myapp/pom.xml --batch-mode --update-snapshots clean package
