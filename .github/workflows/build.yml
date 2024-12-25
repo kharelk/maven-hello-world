@@ -84,7 +84,7 @@ jobs:
           echo "health_status=$OUTPUT" >> $GITHUB_ENV
 
       - name: Commit and Push Updated Version (if Docker container output the hello message)
-        if: ${{ env.health_status == *"Hello World!, from Harel"* }}
+        if: ${{ env.health_status == 'Hello World!, from Harel' }}
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
@@ -94,7 +94,7 @@ jobs:
           git push
 
       - name: Fail the pipeline (if Docker container not output the hello message)
-        if: ${{ env.health_status != *"Hello World!, from Harel"* }}
+        if: ${{ env.health_status != 'Hello World!, from Harel' }}
         run: |
           echo "Health check failed. Skipping commit and fail the pipeline"
           exit 1
