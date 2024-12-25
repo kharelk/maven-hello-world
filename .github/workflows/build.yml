@@ -75,16 +75,26 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }}
 
-      - name: Commit Updated Version
+      - name: Run Docker Image
+        run: |
+          docker pull ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }}
+          docker run -d --name refael-task-java-${{ env.version }} --user 1000:1000 -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }}
+          sleep 10
+          HEALTH_STATUS=$(curl --silent --fail http://localhost:8080/actuator/health || echo "FAIL")
+          echo "health_status=$HEALTH_STATUS" >> $GITHUB_ENV
+
+      - name: Commit and Push Updated Version (if health check passes)
+        if: ${{ env.health_status != 'FAIL' }}
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           AUTHOR=$(git log -1 --pretty=format:'%an')
           git add myapp/pom.xml
           git commit -m "Incremented version to ${{ env.version }} (Last updated by: $AUTHOR)"
-          git push  
+          git push
 
-      - name: Run Docker Image
+      - name: Handle Health Check Failure (optional)
+        if: ${{ env.health_status == 'FAIL' }}
         run: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }}
-          docker run --rm --user 1000:1000 ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }}
+          echo "Health check failed. Skipping commit and fail the pipeline"
+          exit 1
