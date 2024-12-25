@@ -81,6 +81,7 @@ jobs:
           docker run -d --name refael-task-java-${{ env.version }} --user 1000:1000 -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }}
           sleep 10
           HEALTH_STATUS=$(curl --silent --fail http://localhost:8080/actuator/health || echo "FAIL")
+          echo "###### Health-check status: $HEALTH_STATUS ######"
           echo "health_status=$HEALTH_STATUS" >> $GITHUB_ENV
 
       - name: Commit and Push Updated Version (if health check passes)
@@ -93,7 +94,7 @@ jobs:
           git commit -m "Incremented version to ${{ env.version }} (Last updated by: $AUTHOR)"
           git push
 
-      - name: Handle Health Check Failure (optional)
+      - name: Fail the pipeline (if health check failed)
         if: ${{ env.health_status == 'FAIL' }}
         run: |
           echo "Health check failed. Skipping commit and fail the pipeline"
