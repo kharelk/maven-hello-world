@@ -77,15 +77,14 @@ jobs:
 
       - name: Run Docker Image
         run: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }}
-          docker run -d --name refael-task-java-${{ env.version }} --user 1000:1000 -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }}
-          sleep 10
-          HEALTH_STATUS=$(curl --silent --fail http://localhost:8080/actuator/health || echo "FAIL")
-          echo "###### Health-check status: $HEALTH_STATUS ######"
-          echo "health_status=$HEALTH_STATUS" >> $GITHUB_ENV
+          docker run --name refael-task-java-${{ env.env }}-${{ env.version }} --user 1000:1000 ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }}
+          sleep 5
+          OUTPUT=$(docker logs refael-task-java-${{ env.env }}-${{ env.version }})
+          echo "Container Output: $OUTPUT"
+          echo "health_status=$OUTPUT" >> $GITHUB_ENV
 
-      - name: Commit and Push Updated Version (if health check passes)
-        if: ${{ env.health_status != 'FAIL' }}
+      - name: Commit and Push Updated Version (if Docker container output the hello message)
+        if: ${{ env.health_status == *"Hello World!, from Harel"* }}
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
@@ -94,8 +93,8 @@ jobs:
           git commit -m "Incremented version to ${{ env.version }} (Last updated by: $AUTHOR)"
           git push
 
-      - name: Fail the pipeline (if health check failed)
-        if: ${{ env.health_status == 'FAIL' }}
+      - name: Fail the pipeline (if Docker container not output the hello message)
+        if: ${{ env.health_status != *"Hello World!, from Harel"* }}
         run: |
           echo "Health check failed. Skipping commit and fail the pipeline"
           exit 1
