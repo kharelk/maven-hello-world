@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - stage
 
 jobs:
   build-and-deploy:
@@ -21,7 +22,6 @@ jobs:
           architecture: x64
           cache: maven
 
-
       - name: Determine Environment (stage/prod)
         id: environment
         run: |
@@ -31,7 +31,7 @@ jobs:
             echo "env=prod" >> $GITHUB_ENV
           else
             echo "Branch not supported for deployment" && exit 1
-          fi          
+          fi
 
       - name: Build with Maven
         run: mvn -f myapp/pom.xml --batch-mode --update-snapshots clean package
@@ -44,7 +44,6 @@ jobs:
         with:
           name: Maven Build Package
           path: ${{ env.env }}
-
 
       - name: Increment Patch Version
         id: version
@@ -60,10 +59,6 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          # echo "Building Docker Image with tag: ${{ env.version }}"
-          # docker build -f myapp/Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/refael-task-java:${{ env.version }} .
-
-
           echo "Building Docker Image with tag: ${{ env.version }} for ${{ env.env }} environment..."
           docker build \
             --build-arg ENV=${{ env.env }} \
