@@ -33,18 +33,6 @@ jobs:
             echo "Branch not supported for deployment" && exit 1
           fi
 
-      - name: Build with Maven
-        run: mvn -f myapp/pom.xml --batch-mode --update-snapshots clean package
-
-      - name: Package Build Artifacts
-        run: mkdir -p ${{ env.env }} && cp myapp/target/*.jar ${{ env.env }}
-
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: Maven Build Package
-          path: ${{ env.env }}
-
       - name: Increment Patch Version
         id: version
         run: |
@@ -56,6 +44,18 @@ jobs:
           sed -i "s/<version>$CURRENT_VERSION<\/version>/<version>$NEW_VERSION<\/version>/" "$VERSION_FILE"
           echo "New version is: $NEW_VERSION"
           echo "version=$NEW_VERSION" >> $GITHUB_ENV        
+
+      - name: Build with Maven
+        run: mvn -f myapp/pom.xml --batch-mode --update-snapshots clean package
+
+      - name: Package Build Artifacts
+        run: mkdir -p ${{ env.env }} && cp myapp/target/*.jar ${{ env.env }}
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Maven Build Package
+          path: ${{ env.env }}
 
       - name: Build Docker Image
         run: |
