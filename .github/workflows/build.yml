@@ -57,13 +57,8 @@ jobs:
           name: Maven Build Package
           path: ${{ env.env }}
 
-      - name: Build Docker Image
-        run: |
-          echo "Building Docker Image with tag: ${{ env.version }} for ${{ env.env }} environment..."
-          docker build \
-            --build-arg ENV=${{ env.env }} \
-            -f myapp/Dockerfile \
-            -t ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }} .
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2          
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -71,9 +66,25 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Push Docker Image to Docker Hub
+      - name: Build and Push ARM/AMD Docker Image
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }}
+          echo "Building Docker Image with tag: ${{ env.version }} for ${{ env.env }} environment..."
+
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --build-arg ENV=${{ env.env }} \
+            -f myapp/Dockerfile \
+            -t ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }} \
+            --push .
+          
+          # docker build \
+          #   --build-arg ENV=${{ env.env }} \
+          #   -f myapp/Dockerfile \
+          #   -t ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }} .
+
+      # - name: Push Docker Image to Docker Hub
+      #   run: |
+      #     docker push ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }}
 
       - name: Run Docker Image
         run: |
