@@ -21,6 +21,31 @@ jobs:
           architecture: x64
           cache: maven
 
+
+      - name: Determine Environment (stage/prod)
+        id: environment
+        run: |
+          if [[ "${{ github.ref_name }}" == "stage" ]]; then
+            echo "env=stage" >> $GITHUB_ENV
+          elif [[ "${{ github.ref_name }}" == "master" ]]; then
+            echo "env=prod" >> $GITHUB_ENV
+          else
+            echo "Branch not supported for deployment" && exit 1
+          fi          
+
+      - name: Build with Maven
+        run: mvn -f myapp/pom.xml --batch-mode --update-snapshots clean package
+
+      - name: Package Build Artifacts
+        run: mkdir -p ${{ env.env }} && cp myapp/target/*.jar ${{ env.env }}
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Maven Build Package
+          path: ${{ env.env }}
+
+
       - name: Increment Patch Version
         id: version
         run: |
@@ -31,33 +56,19 @@ jobs:
           NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
           sed -i "s/<version>$CURRENT_VERSION<\/version>/<version>$NEW_VERSION<\/version>/" "$VERSION_FILE"
           echo "New version is: $NEW_VERSION"
-          echo "version=$NEW_VERSION" >> $GITHUB_ENV
-
-      - name: Commit Updated Version
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          AUTHOR=$(git log -1 --pretty=format:'%an')
-          git add myapp/pom.xml
-          git commit -m "Incremented version to ${{ env.version }} (Last updated by: $AUTHOR)"
-          git push
-
-      - name: Build with Maven
-        run: mvn -f myapp/pom.xml --batch-mode --update-snapshots clean package
-
-      - name: Package Build Artifacts
-        run: mkdir -p stage && cp myapp/target/*.jar stage
-
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: Maven Build Package
-          path: stage
+          echo "version=$NEW_VERSION" >> $GITHUB_ENV        
 
       - name: Build Docker Image
         run: |
-          echo "Building Docker Image with tag: ${{ env.version }}"
-          docker build -f myapp/Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/refael-task-java:${{ env.version }} .
+          # echo "Building Docker Image with tag: ${{ env.version }}"
+          # docker build -f myapp/Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/refael-task-java:${{ env.version }} .
+
+
+          echo "Building Docker Image with tag: ${{ env.version }} for ${{ env.env }} environment..."
+          docker build \
+            --build-arg ENV=${{ env.env }} \
+            -f myapp/Dockerfile \
+            -t ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }} .
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -67,9 +78,18 @@ jobs:
 
       - name: Push Docker Image to Docker Hub
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/refael-task-java:${{ env.version }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }}
+
+      - name: Commit Updated Version
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          AUTHOR=$(git log -1 --pretty=format:'%an')
+          git add myapp/pom.xml
+          git commit -m "Incremented version to ${{ env.version }} (Last updated by: $AUTHOR)"
+          git push  
 
       - name: Run Docker Image
         run: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/refael-task-java:${{ env.version }}
-          docker run --rm --user 1000:1000 ${{ secrets.DOCKER_USERNAME }}/refael-task-java:${{ env.version }}
+          docker pull ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }}
+          docker run --rm --user 1000:1000 ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }}
