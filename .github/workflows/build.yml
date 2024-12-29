@@ -87,7 +87,7 @@ jobs:
 
       - name: Run Docker Image
         run: |
-          docker run --name refael-task-java-${{ env.env }}-${{ env.version }} --user 1000:1000 ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }}
+          docker run --name refael-task-java-${{ env.env }}-${{ env.version }} --user appuser ${{ secrets.DOCKER_USERNAME }}/refael-task-java-${{ env.env }}:${{ env.version }}
           sleep 5
           OUTPUT=$(docker logs refael-task-java-${{ env.env }}-${{ env.version }})
           echo "Container Output: $OUTPUT"
