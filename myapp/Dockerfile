@@ -37,7 +37,7 @@ COPY --from=build /build/target/*.jar /app/app.jar
 
 RUN if [ "$BUILD_IN_DOCKER" = "false" ]; then \
       echo "Copying pre-built artifact from ${ENV}..." && \
-      cp ${ENV}/*.jar app.jar; \
+      cp /${ENV}/*.jar app.jar; \
     fi
 
 USER appuser
