@@ -12,7 +12,7 @@
 
 
 # Stage 1: Build (only used when BUILD_IN_DOCKER=true)
-FROM maven:3.8.8-openjdk-21-slim AS build
+FROM maven:3.9.9-amazoncorretto-21-debian AS build
 ARG BUILD_IN_DOCKER
 WORKDIR /build
 RUN if [ "$BUILD_IN_DOCKER" = "true" ]; then \
