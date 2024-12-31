@@ -17,7 +17,7 @@ ARG BUILD_IN_DOCKER
 WORKDIR /build
 COPY myapp/ .
 RUN if [ "$BUILD_IN_DOCKER" = "true" ]; then \
-      mvn -f myapp/pom.xml --batch-mode clean package; \
+      mvn -f /build/myapp/pom.xml --batch-mode clean package; \
     fi
 
 # Stage 2: Runtime stage
@@ -30,7 +30,7 @@ ARG ENV
 ENV APP_ENV=$ENV
 
 RUN echo "Copying built artifact from the build stage (will override if BUILD_IN_DOCKER = true)..."
-COPY --from=build /build/target/*.jar app.jar
+COPY --from=build /build/myapp/target/*.jar /app/app.jar
 
 RUN if [ "$BUILD_IN_DOCKER" = "true" ]; then \
       echo "Copying pre-built artifact from ${ENV}..." && \
