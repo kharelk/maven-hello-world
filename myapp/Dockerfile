@@ -1,3 +1,4 @@
+# ------------------- Simple Dockerfile ------------------- # 
 # FROM openjdk:21-jdk-slim
 # RUN groupadd -r appuser && useradd -r -g appuser appuser
 # WORKDIR /app
@@ -9,7 +10,7 @@
 
 
 
-
+# ------------------- MultiStage with Build Stage ------------------- # 
 
 # Stage 1: Build (only used when BUILD_IN_DOCKER=true)
 FROM maven:3.9.9-amazoncorretto-21-debian AS build
@@ -19,6 +20,8 @@ COPY myapp/ .
 RUN if [ "$BUILD_IN_DOCKER" = "true" ]; then \
       mvn -f /build/pom.xml --batch-mode clean package; \
     fi
+
+
 
 # Stage 2: Runtime stage
 FROM openjdk:21-jdk-slim

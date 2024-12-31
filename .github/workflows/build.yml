@@ -33,7 +33,7 @@ jobs:
             echo "Branch not supported for deployment" && exit 1
           fi
           echo "BUILD_IN_PIPELINE=true" >> $GITHUB_ENV
-          echo "BUILD_IN_DOCKER=true" >> $GITHUB_ENV          
+          echo "BUILD_IN_DOCKER=false" >> $GITHUB_ENV          
 
       - name: Increment Patch Version
         id: version
