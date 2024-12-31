@@ -32,7 +32,7 @@ ENV APP_ENV=$ENV
 RUN echo "Copying built artifact from the build stage (will override if BUILD_IN_DOCKER = true)..."
 COPY --from=build /build/target/*.jar /app/app.jar
 
-RUN if [ "$BUILD_IN_DOCKER" = "true" ]; then \
+RUN if [ "$BUILD_IN_DOCKER" = "false" ]; then \
       echo "Copying pre-built artifact from ${ENV}..." && \
       cp ${ENV}/*.jar app.jar; \
     fi
