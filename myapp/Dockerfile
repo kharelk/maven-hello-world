@@ -17,7 +17,7 @@ ARG BUILD_IN_DOCKER
 WORKDIR /build
 RUN if [ "$BUILD_IN_DOCKER" = "true" ]; then \
       cp -r myapp/ . && \
-      mvn -f myapp/pom.xml --batch-mode clean package \
+      mvn -f myapp/pom.xml --batch-mode clean package; \
     fi
 
 # Stage 2: Runtime stage
