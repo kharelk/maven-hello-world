@@ -15,8 +15,8 @@
 FROM maven:3.9.9-amazoncorretto-21-debian AS build
 ARG BUILD_IN_DOCKER
 WORKDIR /build
+COPY myapp/ .
 RUN if [ "$BUILD_IN_DOCKER" = "true" ]; then \
-      cp -r myapp/ . && \
       mvn -f myapp/pom.xml --batch-mode clean package; \
     fi
 
