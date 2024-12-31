@@ -16,7 +16,7 @@ FROM maven:3.8.8-openjdk-21-slim AS build
 ARG BUILD_IN_DOCKER
 WORKDIR /build
 RUN if [ "$BUILD_IN_DOCKER" = "true" ]; then \
-      COPY myapp/ . && \
+      cp -r myapp/ . && \
       mvn -f myapp/pom.xml --batch-mode clean package \
     fi
 
@@ -29,12 +29,12 @@ ARG BUILD_IN_DOCKER
 ARG ENV
 ENV APP_ENV=$ENV
 
+RUN echo "Copying built artifact from the build stage (will override if BUILD_IN_DOCKER = true)..."
+COPY --from=build /build/target/*.jar app.jar
+
 RUN if [ "$BUILD_IN_DOCKER" = "true" ]; then \
-      echo "Copying built artifact from the build stage..." && \
-      COPY --from=build /build/target/*.jar app.jar; \
-    else \
       echo "Copying pre-built artifact from ${ENV}..." && \
-      COPY ${ENV}/*.jar app.jar; \
+      cp ${ENV}/*.jar app.jar; \
     fi
 
 USER appuser
